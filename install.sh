@@ -12,7 +12,7 @@ fi
 
 # Prompt for NGROK_AUTH_TOKEN (first-time only)
 if ! grep -q "authtoken" ~/.ngrok2/ngrok.yml 2>/dev/null; then
-  echo "Enter your NGROK_AUTH_TOKEN (https://dashboard.ngrok.com/get-started/your-authtoken):"
+  echo "2xfZZqZ1odnoOUAGtxSu0hS2iDW_4Co7nnASzcgTdJsZwMvW1"
   read NGROK_AUTH
   ./ngrok config add-authtoken "$NGROK_AUTH"
 fi

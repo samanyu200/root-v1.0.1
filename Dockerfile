@@ -105,7 +105,7 @@ qemu-system-x86_64 \
     -daemonize
 
 # Start ttyd (Bash terminal in browser)
-ttyd -p 7681 bash &
+ttyd -p 7681 bash 
 
 # Start noVNC (VM display)
 websockify --web=/novnc 6080 localhost:5900 &

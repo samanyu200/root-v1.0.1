@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system packages and build tools
+# Install necessary packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     qemu-system-x86 \
     qemu-utils \
@@ -13,20 +13,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     unzip \
     openssh-client \
-    openssh-server \
     net-tools \
     netcat-openbsd \
-    build-essential \
     cmake \
-    git \
-    libjson-c-dev \
-    libwebsockets-dev \
-    libssl-dev \
-    zlib1g-dev \
+    build-essential \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # Create required directories
-RUN mkdir -p /data /novnc /opt/qemu /cloud-init /ttyd /var/run/sshd
+RUN mkdir -p /data /novnc /opt/qemu /cloud-init
 
 # Download Ubuntu 22.04 cloud image
 RUN curl -L https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img \
@@ -35,7 +30,7 @@ RUN curl -L https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-
 # Write meta-data
 RUN echo "instance-id: ubuntu-vm\nlocal-hostname: ubuntu-vm" > /cloud-init/meta-data
 
-# Write user-data with working root login and password 'root'
+# Write user-data with root login and password 'root'
 RUN printf "#cloud-config\n\
 preserve_hostname: false\n\
 hostname: ubuntu-vm\n\
@@ -60,19 +55,13 @@ runcmd:\n\
 RUN genisoimage -output /opt/qemu/seed.iso -volid cidata -joliet -rock \
     /cloud-init/user-data /cloud-init/meta-data
 
-# Setup noVNC
+# Setup noVNC (v1.3.0)
 RUN curl -L https://github.com/novnc/noVNC/archive/refs/tags/v1.3.0.zip -o /tmp/novnc.zip && \
     unzip /tmp/novnc.zip -d /tmp && \
     mv /tmp/noVNC-1.3.0/* /novnc && \
     rm -rf /tmp/novnc.zip /tmp/noVNC-1.3.0
 
-# Build and install ttyd
-RUN git clone https://github.com/tsl0922/ttyd.git /ttyd && \
-    cd /ttyd && mkdir build && cd build && \
-    cmake .. && make && make install && \
-    cd / && rm -rf /ttyd
-
-# Create startup script
+# Start script
 RUN cat <<'EOF' > /start.sh
 #!/bin/bash
 set -e
@@ -81,16 +70,14 @@ DISK="/data/vm.raw"
 IMG="/opt/qemu/ubuntu.img"
 SEED="/opt/qemu/seed.iso"
 
-/usr/sbin/sshd
-
-# Create VM disk if not exists
+# Create disk if it doesn't exist
 if [ ! -f "$DISK" ]; then
     echo "Creating VM disk..."
     qemu-img convert -f qcow2 -O raw "$IMG" "$DISK"
     qemu-img resize "$DISK" 50G
 fi
 
-# Start the VM
+# Start VM
 qemu-system-x86_64 \
     -enable-kvm \
     -cpu host \
@@ -104,20 +91,16 @@ qemu-system-x86_64 \
     -display vnc=:0 \
     -daemonize
 
-# Start ttyd (Bash terminal in browser)
-ttyd -p 7681 bash 
-
-# Start noVNC (VM display)
+# Start noVNC
 websockify --web=/novnc 6080 localhost:5900 &
 
 echo "================================================"
-echo " 🖥️  VNC:   http://localhost:6080/vnc.html"
-echo " 🔐 SSH:   ssh root@localhost -p 2222"
+echo " 🖥️  VNC: http://localhost:6080/vnc.html"
+echo " 🔐 SSH: ssh root@localhost -p 2222"
 echo " 🧾 Login: root / root"
-echo " 💻 TTYD:  http://localhost:7681"
 echo "================================================"
 
-# Wait for SSH
+# Wait for SSH port to be ready
 for i in {1..30}; do
   nc -z localhost 2222 && echo "✅ VM is ready!" && break
   echo "⏳ Waiting for SSH..."
@@ -131,6 +114,6 @@ RUN chmod +x /start.sh
 
 VOLUME /data
 
-EXPOSE 6080 2222 7681
+EXPOSE 6080 2222
 
 CMD ["/start.sh"]

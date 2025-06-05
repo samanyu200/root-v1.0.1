@@ -15,9 +15,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-client \
     net-tools \
     netcat-openbsd \
-    cmake \
-    build-essential \
-    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # Create required directories
@@ -30,7 +27,7 @@ RUN curl -L https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-
 # Write meta-data
 RUN echo "instance-id: ubuntu-vm\nlocal-hostname: ubuntu-vm" > /cloud-init/meta-data
 
-# Write user-data with root login and password 'root'
+# Write user-data with working root login and password 'root'
 RUN printf "#cloud-config\n\
 preserve_hostname: false\n\
 hostname: ubuntu-vm\n\
@@ -55,7 +52,7 @@ runcmd:\n\
 RUN genisoimage -output /opt/qemu/seed.iso -volid cidata -joliet -rock \
     /cloud-init/user-data /cloud-init/meta-data
 
-# Setup noVNC (v1.3.0)
+# Setup noVNC
 RUN curl -L https://github.com/novnc/noVNC/archive/refs/tags/v1.3.0.zip -o /tmp/novnc.zip && \
     unzip /tmp/novnc.zip -d /tmp && \
     mv /tmp/noVNC-1.3.0/* /novnc && \

@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install necessary packages
+# Install required packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     qemu-system-x86 \
     qemu-utils \
@@ -14,21 +14,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     openssh-client \
     net-tools \
-    netcat-openbsd \
+    iproute2 \
+    bridge-utils \
+    zsh \
     && rm -rf /var/lib/apt/lists/*
 
-# Create required directories
+# Setup directories
 RUN mkdir -p /data /novnc /opt/qemu /cloud-init
 
 # Download Ubuntu 22.04 cloud image
 RUN curl -L https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img \
     -o /opt/qemu/ubuntu.img
 
-# Write meta-data
-RUN echo "instance-id: ubuntu-vm\nlocal-hostname: ubuntu-vm" > /cloud-init/meta-data
-
-# Write user-data with working root login and password 'root'
-RUN printf "#cloud-config\n\
+# Meta-data and User-data for cloud-init
+RUN echo "instance-id: ubuntu-vm\nlocal-hostname: ubuntu-vm" > /cloud-init/meta-data && \
+    printf "#cloud-config\n\
 preserve_hostname: false\n\
 hostname: ubuntu-vm\n\
 users:\n\
@@ -52,65 +52,69 @@ runcmd:\n\
 RUN genisoimage -output /opt/qemu/seed.iso -volid cidata -joliet -rock \
     /cloud-init/user-data /cloud-init/meta-data
 
-# Setup noVNC
+# Download and setup noVNC
 RUN curl -L https://github.com/novnc/noVNC/archive/refs/tags/v1.3.0.zip -o /tmp/novnc.zip && \
     unzip /tmp/novnc.zip -d /tmp && \
     mv /tmp/noVNC-1.3.0/* /novnc && \
     rm -rf /tmp/novnc.zip /tmp/noVNC-1.3.0
 
-# Start script
+# Add startup script
 RUN cat <<'EOF' > /start.sh
-#!/bin/bash
-set -e
+#!/bin/sh
+
+set -eu
 
 DISK="/data/vm.raw"
 IMG="/opt/qemu/ubuntu.img"
 SEED="/opt/qemu/seed.iso"
+BRIDGE_IF="br0"
+TAP_IF="tap0"
 
-# Create disk if it doesn't exist
+# Detect shell
+[ -n "${ZSH_VERSION:-}" ] && echo "Using ZSH"
+[ -n "${BASH_VERSION:-}" ] && echo "Using BASH"
+
+# Create VM disk
 if [ ! -f "$DISK" ]; then
     echo "Creating VM disk..."
     qemu-img convert -f qcow2 -O raw "$IMG" "$DISK"
     qemu-img resize "$DISK" 50G
 fi
 
-# Start VM
+# Setup bridge + tap (requires privileged + host net)
+ip tuntap add dev "$TAP_IF" mode tap user root || true
+ip link set "$TAP_IF" up || true
+brctl addif "$BRIDGE_IF" "$TAP_IF" || true
+
+# Launch VM with bridged adapter
 qemu-system-x86_64 \
-    -enable-kvm \
-    -cpu host \
-    -smp 2 \
-    -m 6144 \
-    -drive file="$DISK",format=raw,if=virtio \
-    -drive file="$SEED",format=raw,if=virtio \
-    -netdev user,id=net0,hostfwd=tcp::2222-:22 \
-    -device virtio-net,netdev=net0 \
-    -vga virtio \
-    -display vnc=:0 \
-    -daemonize
+  -enable-kvm \
+  -cpu host \
+  -smp 2 \
+  -m 4096 \
+  -drive file="$DISK",format=raw,if=virtio \
+  -drive file="$SEED",format=raw,if=virtio \
+  -netdev tap,id=net0,ifname="$TAP_IF",script=no,downscript=no \
+  -device virtio-net-pci,netdev=net0 \
+  -vga virtio \
+  -display vnc=:0 \
+  -daemonize
 
 # Start noVNC
 websockify --web=/novnc 6080 localhost:5900 &
 
 echo "================================================"
 echo " 🖥️  VNC: http://localhost:6080/vnc.html"
-echo " 🔐 SSH: ssh root@localhost -p 2222"
 echo " 🧾 Login: root / root"
 echo "================================================"
 
-# Wait for SSH port to be ready
-for i in {1..30}; do
-  nc -z localhost 2222 && echo "✅ VM is ready!" && break
-  echo "⏳ Waiting for SSH..."
-  sleep 2
-done
-
-wait
+sleep infinity
 EOF
 
 RUN chmod +x /start.sh
 
 VOLUME /data
 
-EXPOSE 6080 2222
+EXPOSE 6080
 
 CMD ["/start.sh"]

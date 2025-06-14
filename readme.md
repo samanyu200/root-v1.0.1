@@ -27,3 +27,10 @@ docker build -t ubuntu-vm .
 # Run the container
 
 docker run --privileged -p 6080:6080 -p 2221:2222 -v $PWD/vmdata:/data ubuntu-vm
+
+
+# or
+
+docker build -t ubuntu-vm .
+
+docker run --rm --privileged --net=host -v $PWD/vmdata:/data ubuntu-vm

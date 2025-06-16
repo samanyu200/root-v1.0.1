@@ -1,0 +1,13 @@
+<div style="position: fixed; top: 10px; left: 10px; z-index: 9999;">
+  <button onclick="sendCommand('start')">▶️ Start VPS</button>
+  <button onclick="sendCommand('stop')">⏹ Stop VPS</button>
+  <button onclick="sendCommand('restart')">🔄 Restart VPS</button>
+  <button onclick="sendCommand('bridge')">🌐 Set Bridge</button>
+  <button onclick="sendCommand('nat')">🌐 Set NAT</button>
+</div>
+
+<script>
+function sendCommand(cmd) {
+  fetch(`/action/${cmd}`).then(res => res.text()).then(alert).catch(console.error);
+}
+</script>

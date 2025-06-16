@@ -28,6 +28,19 @@ docker build -t ubuntu-vm .
 
 docker run --privileged -p 6080:6080 -p 2221:2222 -v $PWD/vmdata:/data ubuntu-vm
 
+🐳 To Run in NAT Mode (default):
+bash
+
+
+docker run --privileged -p 6080:6080 -p 2222:2222 -v $PWD/vmdata:/data ubuntu-vm
+
+
+🔁 To Run in Bridge Mode:
+bash
+
+
+docker run --privileged -e NETWORK_MODE=bridge -e BRIDGE_IF=br0 -p 6080:6080 -v $PWD/vmdata:/data ubu
+
 
 # or
 

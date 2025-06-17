@@ -1,11 +1,6 @@
-Ubuntu 22.04 QEMU Virtual Machine in Docker Container
-Docker Ubuntu QEMU
 
-A lightweight Ubuntu 20.04 virtual machine running in a Docker container using QEMU/KVM for optimal performance.
 
 Features
-🐳 Containerized Ubuntu 22.04 VM
-⚡ KVM-accelerated for near-native performance
 🌐 Web-based VNC access (port 6080)
 🔑 SSH access (port 2221)
 💾 Persistent storage volume

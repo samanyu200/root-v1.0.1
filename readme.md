@@ -13,8 +13,8 @@ username:- root
 password:- root
 Installation
 # Clone the repository
-git clone https://github.com/samanyu200/root/
-cd root
+git clone https://github.com/samanyu200/root-v1.0.1/
+cd root-v1.0.1
 
 # Build the Docker image
 docker build -t ubuntu-vm .

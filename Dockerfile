@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install required packages
+# Install necessary packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     qemu-system-x86 \
     qemu-utils \
@@ -24,10 +24,10 @@ RUN mkdir -p /data /novnc /opt/qemu /cloud-init
 RUN curl -L https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img \
     -o /opt/qemu/ubuntu.img
 
-# Cloud-init meta-data
+# Write meta-data
 RUN echo "instance-id: ubuntu-vm\nlocal-hostname: ubuntu-vm" > /cloud-init/meta-data
 
-# Cloud-init user-data with root login
+# Write user-data with working root login and password 'root'
 RUN printf "#cloud-config\n\
 preserve_hostname: false\n\
 hostname: ubuntu-vm\n\
@@ -58,7 +58,7 @@ RUN curl -L https://github.com/novnc/noVNC/archive/refs/tags/v1.3.0.zip -o /tmp/
     mv /tmp/noVNC-1.3.0/* /novnc && \
     rm -rf /tmp/novnc.zip /tmp/noVNC-1.3.0
 
-# Create start.sh
+# Start script
 RUN cat <<'EOF' > /start.sh
 #!/bin/bash
 set -e
@@ -67,19 +67,19 @@ DISK="/data/vm.raw"
 IMG="/opt/qemu/ubuntu.img"
 SEED="/opt/qemu/seed.iso"
 
-# Create raw disk if not exists
+# Create disk if it doesn't exist
 if [ ! -f "$DISK" ]; then
     echo "Creating VM disk..."
     qemu-img convert -f qcow2 -O raw "$IMG" "$DISK"
-    qemu-img resize -f raw "$DISK" 50G
+    qemu-img resize "$DISK" 50G
 fi
 
-# Start QEMU VM
+# Start VM
 qemu-system-x86_64 \
     -enable-kvm \
     -cpu host \
     -smp 2 \
-    -m 4096 \
+    -m 6144 \
     -drive file="$DISK",format=raw,if=virtio \
     -drive file="$SEED",format=raw,if=virtio \
     -netdev user,id=net0,hostfwd=tcp::2222-:22 \
@@ -92,22 +92,22 @@ qemu-system-x86_64 \
 websockify --web=/novnc 6080 localhost:5900 &
 
 echo "================================================"
-echo " 🖥️  Web UI at: http://localhost:6080/vnc.html"
+echo " 🖥️  VNC: http://localhost:6080/vnc.html"
 echo " 🔐 SSH: ssh root@localhost -p 2222"
 echo " 🧾 Login: root / root"
+echo " made by Samanyu200"
 echo "================================================"
 
-# Wait for SSH readiness
+# Wait for SSH port to be ready
 for i in {1..30}; do
   nc -z localhost 2222 && echo "✅ VM is ready!" && break
-  echo "⏳ Waiting for SSH to be ready..."
+  echo "⏳ Waiting for SSH..."
   sleep 2
 done
 
 wait
 EOF
 
-# Make script executable
 RUN chmod +x /start.sh
 
 VOLUME /data

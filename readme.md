@@ -13,7 +13,9 @@ username:- root
 password:- root
 Installation
 # Clone the repository
-git clone https://github.com/samanyu200/root-v1.0.1/
+git clone https://github.com/samanyu200/root-v1.1.1/
+
+# enter the repo
 cd root-v1.0.1
 
 # Build the Docker image

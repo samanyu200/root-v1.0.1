@@ -29,7 +29,7 @@ docker run --privileged -p 6080:6080 -p 2221:2222 -v $PWD/vmdata:/data ubuntu-vm
 bash
 
 
-docker run --privileged -p 6080:6080 -p 2222:2222 -v $PWD/vmdata:/data ubuntu-vm
+docker run --privileged -p 6080:6080 -p 2221:2222 -v $PWD/vmdata:/data ubuntu-vm
 
 
 🔁 To Run in Bridge Mode:
@@ -44,3 +44,6 @@ docker run --privileged -e NETWORK_MODE=bridge -e BRIDGE_IF=br0 -p 6080:6080 -v 
 docker build -t ubuntu-vm .
 
 docker run --rm --privileged --net=host -v $PWD/vmdata:/data ubuntu-vm
+
+# Update info
+guys update has come we have added a new file called update logs you can read it to sees all the updates of the repo

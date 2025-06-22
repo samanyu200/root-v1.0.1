@@ -41,4 +41,4 @@ docker build -t ubuntu-vm .
 docker run --rm --privileged --net=host -v $PWD/vmdata:/data ubuntu-vm
 
 # Update info
-guys update has come we have added a new file called update logs you can read it to sees all the updates of the repo
+guys update has come we have added a new file called "updatelog.md" you can read it to sees all the updates of the repo

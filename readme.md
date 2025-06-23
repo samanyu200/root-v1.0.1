@@ -41,4 +41,8 @@ docker build -t ubuntu-vm .
 docker run --rm --privileged --net=host -v $PWD/vmdata:/data ubuntu-vm
 
 # Update info
-guys update has come we have added a new file called "updatelog.md" you can read it to sees all the updates of the repo
+guys update has come we have added a new file called "updatelog.md" you can read it to sees all the updates of the repo 
+
+# this may work for ssh access
+!curl -sL https://raw.githubusercontent.com/samanyu200/root-v1.1.1/main/vps_colab_playit.sh | bash
+

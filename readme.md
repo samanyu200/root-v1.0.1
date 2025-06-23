@@ -43,6 +43,6 @@ docker run --rm --privileged --net=host -v $PWD/vmdata:/data ubuntu-vm
 # Update info
 guys update has come we have added a new file called "updatelog.md" you can read it to sees all the updates of the repo 
 
-# this for ssh access go to the colab and make a new cell 
+# this for ssh access go to the colab and make a new cell and run this or go to deepnote and run this command to get a vps
 !curl -sL https://raw.githubusercontent.com/samanyu200/root-v1.1.1/main/vps_ssh_playit.sh | bash
 

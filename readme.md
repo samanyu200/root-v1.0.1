@@ -42,6 +42,8 @@ docker build -t ubuntu-vm .
 bash
 
 docker run --privileged -p 6080:6080 -p 2221:2222 -v $PWD/vmdata:/data ubuntu-vm
+docker run --privileged -p 6080:6080 -p 2221:2222 -p 3389:3389 -v $PWD/vmdata:/data ubuntu-vm
+
 🐳 Bridged Network Mode (host networking)
 bash
 

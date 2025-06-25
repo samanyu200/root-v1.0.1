@@ -96,4 +96,4 @@ This project is open for personal use and learning only.
 
 📹 If using in YouTube, TikTok, or any content, credit samanyu200.
 
-📞 Contact on Discord for permission:
+📞 Contact on Discord for permission: @gamer_only99 

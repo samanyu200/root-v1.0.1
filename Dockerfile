@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install packages
+# Install necessary packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     qemu-system-x86 \
     qemu-utils \
@@ -15,22 +15,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-client \
     net-tools \
     netcat-openbsd \
-    xrdp \
-    xfce4 \
-    xfce4-terminal \
     && rm -rf /var/lib/apt/lists/*
 
-# Setup directories
+# Create required directories
 RUN mkdir -p /data /novnc /opt/qemu /cloud-init
 
-# Download Ubuntu cloud image
+# Download Ubuntu 22.04 cloud image
 RUN curl -L https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img \
     -o /opt/qemu/ubuntu.img
 
-# Metadata
+# Write meta-data
 RUN echo "instance-id: ubuntu-vm\nlocal-hostname: ubuntu-vm" > /cloud-init/meta-data
 
-# User-data config with root access
+# Write user-data with working root login and password 'root'
 RUN printf "#cloud-config\n\
 preserve_hostname: false\n\
 hostname: ubuntu-vm\n\
@@ -51,7 +48,7 @@ runcmd:\n\
   - systemctl enable ssh\n\
   - systemctl restart ssh\n" > /cloud-init/user-data
 
-# Create seed ISO
+# Create cloud-init ISO
 RUN genisoimage -output /opt/qemu/seed.iso -volid cidata -joliet -rock \
     /cloud-init/user-data /cloud-init/meta-data
 
@@ -61,12 +58,7 @@ RUN curl -L https://github.com/novnc/noVNC/archive/refs/tags/v1.3.0.zip -o /tmp/
     mv /tmp/noVNC-1.3.0/* /novnc && \
     rm -rf /tmp/novnc.zip /tmp/noVNC-1.3.0
 
-# Enable XRDP
-RUN echo "xfce4-session" > /root/.xsession && \
-    adduser xrdp ssl-cert && \
-    systemctl enable xrdp
-
-# Create start script
+# Start script
 RUN cat <<'EOF' > /start.sh
 #!/bin/bash
 set -e
@@ -75,14 +67,14 @@ DISK="/data/vm.raw"
 IMG="/opt/qemu/ubuntu.img"
 SEED="/opt/qemu/seed.iso"
 
-# Create VM disk if not exists
+# Create disk if it doesn't exist
 if [ ! -f "$DISK" ]; then
     echo "Creating VM disk..."
     qemu-img convert -f qcow2 -O raw "$IMG" "$DISK"
     qemu-img resize "$DISK" 50G
 fi
 
-# Start the VM
+# Start VM
 qemu-system-x86_64 \
     -enable-kvm \
     -cpu host \
@@ -96,23 +88,18 @@ qemu-system-x86_64 \
     -display vnc=:0 \
     -daemonize
 
-# Start noVNC for browser access
+# Start noVNC
 websockify --web=/novnc 6080 localhost:5900 &
 
-# Start XRDP
-systemctl start xrdp
-
 echo "================================================"
-echo " 🖥️  VNC Web: http://localhost:6080/vnc.html"
-echo " 🔐 SSH:      ssh root@localhost -p 2222"
-echo " 💻 RDP:      Connect to localhost:3389"
-echo " 🧾 Login:    root / root"
-echo " 🧠 Made by Samanyu200"
-echo "================================================"
+echo " 🖥️  VNC: http://localhost:6080/vnc.html"
+echo " 🔐 SSH: ssh root@localhost -p 2222"
+echo " 🧾 Login: root / root"
+echo "made-by-Samanyu200"
 
-# Wait for SSH to become available
+# Wait for SSH port to be ready
 for i in {1..30}; do
-  nc -z localhost 2222 && echo "✅ SSH is ready!" && break
+  nc -z localhost 2222 && echo "✅ VM is ready!" && break
   echo "⏳ Waiting for SSH..."
   sleep 2
 done
@@ -124,6 +111,6 @@ RUN chmod +x /start.sh
 
 VOLUME /data
 
-EXPOSE 6080 2222 3389
+EXPOSE 6080 2222
 
 CMD ["/start.sh"]

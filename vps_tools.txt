@@ -1,0 +1,11 @@
+# for port forwarding use telebit.cloud 
+  curl https://get.telebit.io/ | bash
+# for ssh access use tmate
+  apt install tmate
+# for neofetch use
+  apt install neofetch
+# playit cmds
+  wget https://github.com/playit-cloud/playit-agent/releases/download/v0.15.0/playit-linux-amd64
+chmod +x playit-linux-amd64
+./playit-linux-amd64
+  

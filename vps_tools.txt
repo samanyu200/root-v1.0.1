@@ -9,3 +9,48 @@
 chmod +x playit-linux-amd64
 ./playit-linux-amd64
   
+#cockpit cmds
+🛠 1. Install Cockpit and cockpit-machines
+Make sure you installed both Cockpit and the VM manager module (cockpit-machines):
+
+bash
+Copy
+Edit
+sudo apt update
+sudo apt install cockpit cockpit-machines
+If you already installed cockpit but not cockpit-machines, just run:
+
+bash
+Copy
+Edit
+sudo apt install cockpit-machines
+🌐 2. Enable and start Cockpit service
+Start Cockpit and enable it at boot:
+
+bash
+Copy
+Edit
+sudo systemctl enable --now cockpit.socket
+Check it’s running:
+
+bash
+Copy
+Edit
+systemctl status cockpit.socket
+🔥 3. Open firewall (if needed)
+If you’re on a server with UFW firewall enabled:
+
+bash
+Copy
+Edit
+sudo ufw allow 9090/tcp
+sudo ufw reload
+Cockpit runs on port 9090.
+
+🌍 4. Access Cockpit in your browser
+Now go to:
+
+cpp
+Copy
+Edit
+https://<your-server-ip>:9090

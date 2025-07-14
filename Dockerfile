@@ -58,7 +58,7 @@ RUN curl -L https://github.com/novnc/noVNC/archive/refs/tags/v1.3.0.zip -o /tmp/
     mv /tmp/noVNC-1.3.0/* /novnc && \
     rm -rf /tmp/novnc.zip /tmp/noVNC-1.3.0
 
-# Start script
+# Start script with auto-detect
 RUN cat <<'EOF' > /start.sh
 #!/bin/bash
 set -e
@@ -66,6 +66,15 @@ set -e
 DISK="/data/vm.raw"
 IMG="/opt/qemu/ubuntu.img"
 SEED="/opt/qemu/seed.iso"
+
+# Detect host CPU cores and RAM
+HOST_CORES=$(nproc)
+HOST_RAM_MB=$(grep MemTotal /proc/meminfo | awk '{print int($2/1024)}')
+# Use 90% of host RAM (safety margin)
+VM_RAM_MB=$((HOST_RAM_MB * 90 / 100))
+
+echo "Detected $HOST_CORES CPU cores and $HOST_RAM_MB MB RAM on host."
+echo "Allocating $HOST_CORES cores and $VM_RAM_MB MB RAM to VM."
 
 # Create disk if it doesn't exist
 if [ ! -f "$DISK" ]; then
@@ -78,8 +87,8 @@ fi
 qemu-system-x86_64 \
     -enable-kvm \
     -cpu host \
-    -smp 2 \
-    -m 6144 \
+    -smp "$HOST_CORES" \
+    -m "$VM_RAM_MB" \
     -drive file="$DISK",format=raw,if=virtio \
     -drive file="$SEED",format=raw,if=virtio \
     -netdev user,id=net0,hostfwd=tcp::2222-:22 \
@@ -95,7 +104,8 @@ echo "================================================"
 echo " 🖥️  VNC: http://localhost:6080/vnc.html"
 echo " 🔐 SSH: ssh root@localhost -p 2222"
 echo " 🧾 Login: root / root"
-echo "made-by-Samanyu200"
+echo " 🚀 Made by Samanyu200"
+echo "================================================"
 
 # Wait for SSH port to be ready
 for i in {1..30}; do

@@ -1,4 +1,4 @@
-# 🐧 Ubuntu 22.04 VM via Docker (ubuntu-v1.1.1)
+# 🐧 Ubuntu 22.04 VM via Docker (root-v1.1.1)
 
 > 🚀 Create a full Ubuntu 22.04 VPS in your browser with **web-based UI**, **SSH**, and **persistent storage**.  
 > ✅ Ideal for use in GitHub Codespaces, CodeSandbox, Gitpod, Deepnote, and Colab!
@@ -31,8 +31,8 @@
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/samanyu200/ubuntu-v1.1.1
-cd ubuntu-v1.1.1
+git clone https://github.com/samanyu200/root-v1.1.1
+cd root-v1.1.1
 2️⃣ Build the Docker image
 bash
 

@@ -12,6 +12,6 @@ docker run --privileged -p 6080:6080 -p 2221:2222 -v $PWD/vmdata:/data ubuntu-vm
  python3 <(curl -s https://raw.githubusercontent.com/samanyu200/root-v1.1.1/refs/heads/main/24)
 
 # want deb shell use 
-docker run --privileged -it -p 9090:9090 debian:bookworm bash
+docker run --privileged -it  debian:bookworm bash
 
 
